@@ -1,5 +1,8 @@
 {
   "expo": {
+    "statusBar": {
+      "style": "dark"
+    },
     "name": "FrontEnd",
     "slug": "FrontEnd",
     "version": "1.0.0",
