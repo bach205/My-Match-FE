@@ -11,7 +11,6 @@ import {
     TEXT,
     SCALE,
     BUTTON_TEXT,
-    BORDER,
     BOX_SHADOW,
     BUTTON_STANDARD,
     WRAPPER_SHADOW,
