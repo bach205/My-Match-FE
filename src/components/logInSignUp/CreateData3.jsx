@@ -9,7 +9,7 @@ import {
     SCALE, BUTTON_TEXT, SafeAreaViewContainer, BUTTON_STANDARD,
     WRAPPER_SHADOW, TEXT_TITLE, TITLE, BOX_SHADOW, CHOICE, WORD,
     BACKGROUND
-} from "../styles/StyleVariable"
+} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
 
 const CommunicationStyleOption = React.memo(({ communicationStyle, setCommunicationStyle, label }) => {
@@ -99,10 +99,10 @@ const CreateData3 = function ({ navigation, route }) {
             name,
             gender,
             birth,
+            targetGender,
+            targetRelation,
             communicationStyle,
             academic,
-            targetGender,
-            targetRelation
         })
     }, [communicationStyle, academic])
 

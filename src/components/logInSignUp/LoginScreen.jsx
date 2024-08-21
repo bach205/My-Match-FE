@@ -8,7 +8,7 @@ import {
     WORD_20,
     WRAPPER_SHADOW,
     BOX_SHADOW,
-} from "../styles/StyleVariable"
+} from "../../styles/StyleVariable"
 
 const loginHandle = (navigation) => {
     //thiếu gửi yêu cầu đến Oauth fix

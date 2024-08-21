@@ -1,12 +1,17 @@
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar, Pressable } from "react-native"
+import { StyleSheet, View, Text, TouchableOpacity, StatusBar } from "react-native"
 import React from "react";
 import {
     BACKGROUND, TEXT, SCALE, BUTTON_TEXT, SafeAreaViewContainer
     , WRAPPER_SHADOW, BOX_SHADOW, TITLE, CHOICE, WORD
-} from "../styles/StyleVariable"
+} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
 
 const FindMBTI = ({ navigation, route }) => {
+
+    const handleLogin = (destination) => {
+        navigation.navigate(destination, route.params);
+    }
+
     return (
         <>
             <StatusBar barStyle="light-content" />
@@ -28,7 +33,7 @@ const FindMBTI = ({ navigation, route }) => {
                             <Text style={[TITLE]}>
                                 <FormattedMessage id="MBTI test" defaultMessage={"MBTI test"} />
                             </Text>
-                            <Pressable style={[WRAPPER_SHADOW, BOX_SHADOW, CHOICE
+                            <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, CHOICE
                                 , {
                                     height: 40 * SCALE, justifyContent: "center",
                                     backgroundColor: BUTTON_TEXT
@@ -37,17 +42,20 @@ const FindMBTI = ({ navigation, route }) => {
                                 <Text style={[WORD, { color: BACKGROUND, }]}>
                                     <FormattedMessage id="I already know my type" defaultMessage={"I already know my type"} />
                                 </Text>
-                            </Pressable>
-                            <Pressable style={[WRAPPER_SHADOW, BOX_SHADOW, CHOICE,
-                                {
-                                    height: 40 * SCALE, justifyContent: "center",
-                                    backgroundColor: BUTTON_TEXT
-                                }
-                            ]}>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={
+                                    [WRAPPER_SHADOW, BOX_SHADOW, CHOICE,
+                                        {
+                                            height: 40 * SCALE, justifyContent: "center",
+                                            backgroundColor: BUTTON_TEXT
+                                        }
+                                    ]}
+                                onPress={() => handleLogin("FindEI")}>
                                 <Text style={[WORD, { color: BACKGROUND, }]}>
                                     <FormattedMessage id="Take a short quiz" defaultMessage={"Take a short quiz"} />
                                 </Text>
-                            </Pressable>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>

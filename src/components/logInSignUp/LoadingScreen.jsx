@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 import React from 'react';
-import { BACKGROUND, TEXT, SCALE } from "../styles/StyleVariable"
+import { BACKGROUND, TEXT, SCALE } from "../../styles/StyleVariable"
 /**
  * kiểm tra xem đã login hay chưa nếu có thì điều hướng sang Home
  * chưa thì điều hướng sang Login

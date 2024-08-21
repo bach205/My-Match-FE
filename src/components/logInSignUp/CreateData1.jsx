@@ -3,7 +3,7 @@ import {
     View, Text, TouchableOpacity, KeyboardAvoidingView,
     TextInput, Platform, Keyboard,
     TouchableWithoutFeedback,
-    ScrollView, SafeAreaView,
+    ScrollView,
 } from "react-native"
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -16,7 +16,7 @@ import {
     WRAPPER_SHADOW,
     TITLE,
     SafeAreaViewContainer
-} from "../styles/StyleVariable"
+} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 
@@ -223,12 +223,12 @@ const CreateData1 = ({ navigation }) => {
     const [isShown, setIsShown] = useState(false);
     const [age, setAge] = useState("");
     const [zodiac, setZodiac] = useState("");
-    const HandleContinue = useCallback(function (name, gender, birth) {
+    const HandleContinue = useCallback(function (name) {
         // name !== "" &&
         //     gender !== "" &&
         //     birth !== "" &&
         navigation.navigate("CreateData2", {
-            name,
+            name: name,
             gender,
             birth,
             age,
@@ -274,7 +274,7 @@ const CreateData1 = ({ navigation }) => {
 
                         <View style={styles.footer}>
                             <TouchableOpacity
-                                onPress={() => HandleContinue(name.current, gender, birth)}
+                                onPress={() => HandleContinue(name.current)}
                                 activeOpacity={
                                     name !== "" &&
                                         gender !== "" &&

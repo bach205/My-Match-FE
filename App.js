@@ -23,6 +23,11 @@ export default function App() {
           <Stack.Screen name="CreateData2" component={Components.CreateData2} />
           <Stack.Screen name="CreateData3" component={Components.CreateData3} />
           <Stack.Screen name="FindMBTI" component={Components.FindMBTI} />
+          <Stack.Screen name="FindEI" component={Components.FindEI} />
+          <Stack.Screen name="FindSN" component={Components.FindSN} />
+          <Stack.Screen name="FindTF" component={Components.FindTF} />
+          <Stack.Screen name="FindJP" component={Components.FindJP} />
+          <Stack.Screen name="ResultMBTI" component={Components.ResultMBTI} />
         </Stack.Navigator>
       </NavigationContainer>
     </IntlProviderWrapper>

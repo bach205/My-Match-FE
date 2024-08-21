@@ -1,7 +1,7 @@
 import { FormattedMessage } from "react-intl"
 import { StyleSheet, View, Text, StatusBar } from "react-native"
 import React from "react"
-import { BACKGROUND, TEXT, SCALE } from "../styles/StyleVariable"
+import { BACKGROUND, TEXT, SCALE } from "../../styles/StyleVariable"
 const HomeScreen = function ({ navigation }) {
     /**
      * Kiểm tra xem có phải được điều hướng từ LoadingScreen không

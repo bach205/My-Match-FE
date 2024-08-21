@@ -9,7 +9,7 @@ import {
     SCALE, BUTTON_TEXT, SafeAreaViewContainer, BUTTON_STANDARD,
     WRAPPER_SHADOW, TEXT_TITLE, TITLE, BOX_SHADOW, CHOICE, WORD,
     BACKGROUND
-} from "../styles/StyleVariable"
+} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
 
 const TargetRelationOption = React.memo(({ targetRelation, setTargetRelation, label }) => {
@@ -81,8 +81,6 @@ const GetTargetGender = React.memo(({ targetGender, setTargetGender }) => {
 })
 
 const CreateData2 = function ({ navigation, route }) {
-
-    console.log(route.params.name, route.params.gender)
     const [targetGender, setTargetGender] = useState("");
     const [targetRelation, setTargetRelation] = useState("");
     const { name, gender, birth } = route.params;
