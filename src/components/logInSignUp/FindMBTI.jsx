@@ -1,10 +1,18 @@
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar } from "react-native"
 import React from "react";
-import {
-    BACKGROUND, TEXT, SCALE, BUTTON_TEXT, SafeAreaViewContainer
-    , WRAPPER_SHADOW, BOX_SHADOW, TITLE, CHOICE, WORD
-} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    BACKGROUND,
+    BOX_SHADOW,
+    BUTTON_TEXT,
+    CHOICE,
+    SafeAreaViewContainer,
+    SCALE,
+    TEXT,
+    TITLE,
+    WORD,
+    WRAPPER_SHADOW
+} from "../../styles/StyleVariable";
 
 const FindMBTI = ({ navigation, route }) => {
 

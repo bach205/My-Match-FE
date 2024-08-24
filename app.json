@@ -1,9 +1,6 @@
 {
   "expo": {
-    "statusBar": {
-      "style": "dark"
-    },
-    "name": "FrontEnd",
+    "name": "MyMatchFE",
     "slug": "FrontEnd",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,17 +11,29 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.huybach.MyMatch"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "googleServicesFile": "./google-services.json",
+      "package": "com.huybach.MyMatch"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "83537edf-62ea-4376-b295-6bc5ab56216b"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
-import { StatusBar, TouchableOpacity, Text } from "react-native"
-import { BOX_SHADOW, BUTTON_STANDARD, SafeAreaViewContainer, WORD_20, WRAPPER_SHADOW } from "../../styles/StyleVariable"
+import { StatusBar, Text, TouchableOpacity } from "react-native";
+import { BOX_SHADOW, BUTTON_STANDARD, SafeAreaViewContainer, WORD_20, WRAPPER_SHADOW } from "../../styles/StyleVariable";
 
 const ResultMBTI = ({ navigation, route }) => {
 

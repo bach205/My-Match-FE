@@ -2,12 +2,22 @@ import { IntlProviderWrapper } from "./src/HOC";
 import * as Components from "./src/components"
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 const Stack = createNativeStackNavigator();
+
+const linking = {
+  prefixes: ['com.huybach.MyMatch://'],
+  config: {
+    screens: {
+      Login: 'login',
+    },
+  },
+};
 
 export default function App() {
   return (
     <IntlProviderWrapper>
-      <NavigationContainer initialRouteName="Loading" theme={DarkTheme}>
+      <NavigationContainer initialRouteName="Loading" theme={DarkTheme} linking={linking}>
         <Stack.Navigator
           screenOptions={{
             animationEnabled: true,

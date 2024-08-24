@@ -1,11 +1,19 @@
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar, Pressable, ScrollView } from "react-native"
 import React, { useCallback, useRef, useState } from "react";
-import {
-    BACKGROUND, TEXT, SCALE, BUTTON_TEXT, SafeAreaViewContainer
-    , WRAPPER_SHADOW, BOX_SHADOW, TITLE, CHOICE, WORD,
-    BUTTON_STANDARD
-} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
+import { Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    BACKGROUND,
+    BOX_SHADOW,
+    BUTTON_STANDARD,
+    BUTTON_TEXT,
+    CHOICE,
+    SafeAreaViewContainer,
+    SCALE,
+    TEXT,
+    TITLE,
+    WORD,
+    WRAPPER_SHADOW
+} from "../../styles/StyleVariable";
 
 const QuestAnswer = React.memo(({ choice, setChoice, answer, label }) => {
     return (

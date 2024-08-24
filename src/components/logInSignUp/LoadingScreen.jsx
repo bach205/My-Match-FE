@@ -1,9 +1,9 @@
-import { FormattedMessage } from 'react-intl';
 import { StatusBar } from 'expo-status-bar';
+import React, { useState } from 'react';
+import { FormattedMessage } from 'react-intl';
 import { StyleSheet, Text, View } from 'react-native';
-import { useState } from 'react';
-import React from 'react';
-import { BACKGROUND, TEXT, SCALE } from "../../styles/StyleVariable"
+import { BACKGROUND, SCALE, TEXT } from "../../styles/StyleVariable";
+
 /**
  * kiểm tra xem đã login hay chưa nếu có thì điều hướng sang Home
  * chưa thì điều hướng sang Login

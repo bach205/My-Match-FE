@@ -1,11 +1,19 @@
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar, Pressable, ScrollView } from "react-native"
 import React, { useCallback, useRef, useState } from "react";
-import {
-    BACKGROUND, TEXT, SCALE, BUTTON_TEXT, SafeAreaViewContainer
-    , WRAPPER_SHADOW, BOX_SHADOW, TITLE, CHOICE, WORD,
-    BUTTON_STANDARD
-} from "../../styles/StyleVariable"
 import { FormattedMessage } from "react-intl";
+import { Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    BACKGROUND,
+    BOX_SHADOW,
+    BUTTON_STANDARD,
+    BUTTON_TEXT,
+    CHOICE,
+    SafeAreaViewContainer,
+    SCALE,
+    TEXT,
+    TITLE,
+    WORD,
+    WRAPPER_SHADOW
+} from "../../styles/StyleVariable";
 
 const QuestAnswer = React.memo(({ choice, setChoice, answer, label }) => {
     return (
@@ -75,9 +83,9 @@ const FindTF = ({ navigation, route }) => {
                     </TouchableOpacity>
                 </View >
                 <View style={styles.main}>
-                    <Quest choice={first} setChoice={setFirst} question="You are the type of person" answer1="Strong-willed and not easily persuaded" answer2="Flexible and open to changing my mind" />
-                    <Quest choice={second} setChoice={setSecond} question="When someone need help I usually" answer1="Give advice based on experience and reasoning" answer2="Provide emotional, listen and empathize" />
-                    <Quest choice={third} setChoice={setThird} question="When I am criticized by others" answer1="I prefer to find out the reason" answer2="I might feel disappointed" />
+                    <Quest choice={first} setChoice={setFirst} question="I am" answer1="Strong-willed and not easily persuaded" answer2="Flexible and open to changing my mind" />
+                    <Quest choice={second} setChoice={setSecond} question="When someone need help I usually" answer1="Give advice based on experience" answer2="Provide emotional, listen and empathize" />
+                    <Quest choice={third} setChoice={setThird} question="When I am criticized" answer1="I prefer to find out the reason" answer2="I might feel disappointed" />
                 </View>
                 <View style={styles.footer}>
                     <TouchableOpacity

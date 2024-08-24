@@ -82,7 +82,7 @@ const FindJP = ({ navigation, route }) => {
                 <View style={styles.main}>
                     <Quest choice={first} setChoice={setFirst} question="Before a trip, I usually" answer1="Plan a detailed and clear schedule" answer2="Go with the flow" />
                     <Quest choice={second} setChoice={setSecond} question="Things go better if" answer1="They are prepared in advance" answer2="They happen naturally" />
-                    <Quest choice={third} setChoice={setThird} question="I usually finish my tasks" answer1="Before the deadline" answer2="Close to the deadline" />
+                    <Quest choice={third} setChoice={setThird} question="I usually finish tasks" answer1="Before the deadline" answer2="Close to the deadline" />
                 </View>
                 <View style={styles.footer}>
                     <TouchableOpacity

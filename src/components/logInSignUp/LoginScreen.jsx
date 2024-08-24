@@ -1,14 +1,18 @@
 import React from "react";
-import { StyleSheet, View, Text, StatusBar, TouchableOpacity } from "react-native";
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
     BACKGROUND,
-    TEXT,
-    SCALE,
+    BOX_SHADOW,
     BUTTON_STANDARD,
+    SCALE,
+    TEXT,
     WORD_20,
     WRAPPER_SHADOW,
-    BOX_SHADOW,
-} from "../../styles/StyleVariable"
+} from "../../styles/StyleVariable";
+
+//Client_id
+//android 606859683199-ac0a499qf4ukl4ek2qnvneehk6otptnu.apps.googleusercontent.com
+//ios 606859683199-feg0vme79got7qude8tqq231o9e4enhk.apps.googleusercontent.com
 
 const loginHandle = (navigation) => {
     //thiếu gửi yêu cầu đến Oauth fix
@@ -22,6 +26,7 @@ const loginHandle = (navigation) => {
 }
 
 const LoginScreen = function ({ navigation }) {
+
     /**
      * Xóa stack của navigation rồi reset lại 
      * với First entry là LoginScreen
@@ -39,7 +44,9 @@ const LoginScreen = function ({ navigation }) {
                 Hello from Loginscreen
             </Text>
             <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
-                onPress={() => { loginHandle(navigation); }}
+                onPress={
+                    () => console.log(1)
+                }
             >
                 <Text style={[WORD_20, { color: BACKGROUND }]}>
                     Login with google
