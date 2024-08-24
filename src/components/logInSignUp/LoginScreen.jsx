@@ -1,18 +1,17 @@
-import React from "react";
-import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useCallback, useEffect } from "react";
+import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import {
     BACKGROUND,
     BOX_SHADOW,
     BUTTON_STANDARD,
+    SafeAreaViewContainer,
     SCALE,
     TEXT,
     WORD_20,
     WRAPPER_SHADOW,
 } from "../../styles/StyleVariable";
-
-//Client_id
-//android 606859683199-ac0a499qf4ukl4ek2qnvneehk6otptnu.apps.googleusercontent.com
-//ios 606859683199-feg0vme79got7qude8tqq231o9e4enhk.apps.googleusercontent.com
+import auth from "@react-native-firebase/auth";
+import { firebase } from '@react-native-firebase/app';
 
 const loginHandle = (navigation) => {
     //thiếu gửi yêu cầu đến Oauth fix
@@ -24,8 +23,12 @@ const loginHandle = (navigation) => {
     else navigation.navigate("CreateData1");
 
 }
-
 const LoginScreen = function ({ navigation }) {
+    console.log(firebase.app().name);
+
+    const [confirm, setConfirm] = useState(null);
+    const [code, setCode] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
 
     /**
      * Xóa stack của navigation rồi reset lại 
@@ -38,22 +41,98 @@ const LoginScreen = function ({ navigation }) {
             routes: [{ name: "Login" }]
         });
     }
+
+    //ẩn verify code cho các android tự động nhập 
+    const onAuthStateChanged = user => {
+        if (user) {
+            console.log("succesfully");
+        }
+    }
+
+    useEffect(() => {
+        const subcriber = auth().onAuthStateChanged(onAuthStateChanged);
+        return subcriber;
+    }, [])
+
+    const signInWithPhoneNumber = useCallback(async () => {
+        try {
+            const confirmation = await auth().signInWithPhoneNumber(phoneNumber, true);
+            // Xử lý xác thực thành công, lưu confirmation để xác nhận mã OTP
+            console.log('Confirmation result:', confirmation);
+            setConfirm(confirmation);
+        } catch (error) {
+            // Xử lý lỗi
+            switch (error.code) {
+                case 'auth/invalid-phone-number':
+                    alert('Số điện thoại không hợp lệ.');
+                    break;
+                case 'auth/missing-phone-number':
+                    alert('Số điện thoại bị thiếu.');
+                    break;
+                case 'auth/quota-exceeded':
+                    alert('Đã vượt quá hạn mức gửi SMS.');
+                    break;
+                case 'auth/user-disabled':
+                    alert('Tài khoản người dùng bị vô hiệu hóa.');
+                    break;
+                case 'auth/operation-not-allowed':
+                    alert('Nhà cung cấp xác thực chưa được bật trong Firebase Console.');
+                    break;
+                default:
+                    alert('Lỗi không xác định');
+                    console.error("undefine error when sent OTP: ", error.message);
+                    break;
+            }
+        }
+    }, [phoneNumber])
+    const confirmCode = useCallback(async () => {
+        try {
+            confirm.confirm(code)
+        } catch (error) {
+            alert("Invalid code");
+            console.error(error.message);
+        }
+    }, [code])
+
     return (
-        <View style={styles.header}>
-            <Text style={styles.text}>
-                Hello from Loginscreen
-            </Text>
-            <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
-                onPress={
-                    () => console.log(1)
-                }
-            >
-                <Text style={[WORD_20, { color: BACKGROUND }]}>
-                    Login with google
-                </Text>
-            </TouchableOpacity>
+        <SafeAreaViewContainer style={styles.header}>
+            {!confirm
+                ? (<><TextInput
+                    maxLength={15}
+                    placeholder="09xxxxxxxx"
+                    placeholderTextColor={TEXT}
+                    value={phoneNumber}
+                    onChangeText={newNumber => setPhoneNumber(newNumber)}
+                    style={styles.text}>
+                </TextInput>
+                    <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
+                        onPress={
+                            () => signInWithPhoneNumber()
+                        }
+                    >
+                        <Text style={[WORD_20, { color: BACKGROUND }]}>
+                            Login with phone number
+                        </Text>
+                    </TouchableOpacity></>)
+                : (<><TextInput
+                    maxLength={6}
+                    placeholder="Code"
+                    placeholderTextColor={TEXT}
+                    value={code}
+                    onChangeText={newCode => setCode(newCode)}
+                    style={styles.text}>
+                </TextInput>
+                    <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
+                        onPress={
+                            () => signInWithPhoneNumber()
+                        }
+                    >
+                        <Text style={[WORD_20, { color: BACKGROUND }]}>
+                            Login with phone number
+                        </Text>
+                    </TouchableOpacity></>)}
             <StatusBar style="auto" />
-        </View>
+        </SafeAreaViewContainer>
     )
 }
 
