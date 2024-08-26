@@ -1,17 +1,23 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import auth from "@react-native-firebase/auth";
+import React, { useEffect, useRef, useState } from "react";
+import { Keyboard, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {
     BACKGROUND,
     BOX_SHADOW,
     BUTTON_STANDARD,
+    BUTTON_TEXT,
     SafeAreaViewContainer,
     SCALE,
     TEXT,
+    TEXT_TITLE,
+    TITLE,
+    WORD,
     WORD_20,
     WRAPPER_SHADOW,
 } from "../../styles/StyleVariable";
-import auth from "@react-native-firebase/auth";
-import { firebase } from '@react-native-firebase/app';
+import { FormattedMessage } from "react-intl";
+
+
 
 const loginHandle = (navigation) => {
     //thiếu gửi yêu cầu đến Oauth fix
@@ -24,11 +30,15 @@ const loginHandle = (navigation) => {
 
 }
 const LoginScreen = function ({ navigation }) {
-    console.log(firebase.app().name);
 
     const [confirm, setConfirm] = useState(null);
-    const [code, setCode] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
+    const [isPhoneFocus, setIsPhoneFocus] = useState(false);
+    const [CountryCode, setCountryCode] = useState('+');
+
+    const phoneNumber = useRef('');
+    const inputRefs = useRef([]);
+    const codeRefs = useRef(["", "", "", "", "", ""]);
+    const code = useRef('');
 
     /**
      * Xóa stack của navigation rồi reset lại 
@@ -45,7 +55,7 @@ const LoginScreen = function ({ navigation }) {
     //ẩn verify code cho các android tự động nhập 
     const onAuthStateChanged = user => {
         if (user) {
-            console.log("succesfully");
+            console.log(user);
         }
     }
 
@@ -54,98 +64,183 @@ const LoginScreen = function ({ navigation }) {
         return subcriber;
     }, [])
 
-    const signInWithPhoneNumber = useCallback(async () => {
+    const signInWithPhoneNumber = async (number) => {
         try {
-            const confirmation = await auth().signInWithPhoneNumber(phoneNumber, true);
+            const confirmation = await auth().signInWithPhoneNumber(number);
             // Xử lý xác thực thành công, lưu confirmation để xác nhận mã OTP
             console.log('Confirmation result:', confirmation);
             setConfirm(confirmation);
         } catch (error) {
-            // Xử lý lỗi
-            switch (error.code) {
-                case 'auth/invalid-phone-number':
-                    alert('Số điện thoại không hợp lệ.');
-                    break;
-                case 'auth/missing-phone-number':
-                    alert('Số điện thoại bị thiếu.');
-                    break;
-                case 'auth/quota-exceeded':
-                    alert('Đã vượt quá hạn mức gửi SMS.');
-                    break;
-                case 'auth/user-disabled':
-                    alert('Tài khoản người dùng bị vô hiệu hóa.');
-                    break;
-                case 'auth/operation-not-allowed':
-                    alert('Nhà cung cấp xác thực chưa được bật trong Firebase Console.');
-                    break;
-                default:
-                    alert('Lỗi không xác định');
-                    console.error("undefine error when sent OTP: ", error.message);
-                    break;
-            }
+            console.error(error.message)
         }
-    }, [phoneNumber])
-    const confirmCode = useCallback(async () => {
+    }
+
+
+    const confirmCode = async () => {
         try {
-            confirm.confirm(code)
+            confirm.confirm(code.current)
         } catch (error) {
             alert("Invalid code");
             console.error(error.message);
         }
-    }, [code])
+    }
+
+    //optional chaining (?) kiểm tra xem là null hay undefine thì sẽ trả ra undefine chứ kh gây lỗi
+    const handleOnChangeCode = (text, index) => {
+        if (text !== 'Backspace') {
+            codeRefs.current[index] = text;
+            inputRefs.current[index + 1]?.focus();
+        } else {
+            codeRefs.current[index] = ''
+            inputRefs.current[index - 1]?.focus();
+        }
+    }
 
     return (
+
         <SafeAreaViewContainer style={styles.header}>
-            {!confirm
-                ? (<><TextInput
-                    maxLength={15}
-                    placeholder="09xxxxxxxx"
-                    placeholderTextColor={TEXT}
-                    value={phoneNumber}
-                    onChangeText={newNumber => setPhoneNumber(newNumber)}
-                    style={styles.text}>
-                </TextInput>
-                    <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
-                        onPress={
-                            () => signInWithPhoneNumber()
-                        }
-                    >
-                        <Text style={[WORD_20, { color: BACKGROUND }]}>
-                            Login with phone number
-                        </Text>
-                    </TouchableOpacity></>)
-                : (<><TextInput
-                    maxLength={6}
-                    placeholder="Code"
-                    placeholderTextColor={TEXT}
-                    value={code}
-                    onChangeText={newCode => setCode(newCode)}
-                    style={styles.text}>
-                </TextInput>
-                    <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
-                        onPress={
-                            () => signInWithPhoneNumber()
-                        }
-                    >
-                        <Text style={[WORD_20, { color: BACKGROUND }]}>
-                            Login with phone number
-                        </Text>
-                    </TouchableOpacity></>)}
-            <StatusBar style="auto" />
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                {!confirm
+                    ? (
+                        <View style={styles.main}>
+                            <View style={{ padding: 40 * SCALE }}>
+                                <Text style={[TITLE, { fontSize: 26, color: TEXT }]}>
+                                    <FormattedMessage id="Verify your phone number" defaultMessage={"Verify your phone number"} />
+                                </Text>
+                                <Text style={[WORD, { color: TEXT_TITLE }]}>
+                                    <FormattedMessage id="Please confirm your country code and enter your phone number" defaultMessage={"Please confirm your country code and enter your phone number"} />
+                                </Text>
+                            </View>
+                            <View style={{ marginBottom: 40 * SCALE, flexDirection: "row" }}>
+                                <TouchableOpacity
+                                    onPress={() => navigation.navigate("CountryCode", { setCountryCode })}>
+                                    <TextInput
+                                        editable={false}
+                                        value={CountryCode}
+                                        placeholderTextColor={TEXT}
+                                        style={[styles.text, styles.phoneInput,
+                                        {
+                                            minWidth: 60 * SCALE, padding: 10 * SCALE,
+                                            borderRightWidth: 0
+                                        }]} />
+                                </TouchableOpacity>
+                                <View style={{ borderColor: "#FFFFFF", borderWidth: 0.5 * SCALE }}></View>
+                                <TextInput
+                                    onFocus={() => setIsPhoneFocus(true)}
+                                    onBlur={() => setIsPhoneFocus(false)}
+                                    maxLength={12}
+                                    placeholder="000 000 0000"
+                                    placeholderTextColor={TEXT_TITLE}
+                                    keyboardType="numeric"
+                                    onChangeText={newNumber => { phoneNumber.current = newNumber }}
+                                    style={[styles.text, styles.phoneInput,
+                                    {
+                                        minWidth: 240 * SCALE, maxWidth: 240 * SCALE, padding: 10 * SCALE,
+                                        borderLeftWidth: 0, paddingLeft: 20 * SCALE, paddingRight: 20 * SCALE,
+                                    },
+                                    isPhoneFocus && { borderColor: BUTTON_TEXT }]} />
+                            </View>
+                            <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
+                                onPress={
+                                    () => signInWithPhoneNumber(CountryCode + phoneNumber.current)
+                                }
+                            >
+                                <Text style={[WORD_20, { color: BACKGROUND }]}>
+                                    <FormattedMessage id="Send code" defaultMessage={"Send code"} />
+                                </Text>
+                            </TouchableOpacity>
+                        </View>)
+                    : (
+                        <View style={styles.main}>
+                            <View style={{ padding: 40 * SCALE }}>
+                                <Text style={[TITLE, { fontSize: 26, color: TEXT }]}>
+                                    <FormattedMessage id="Verification code" defaultMessage={"Verification code"} />
+                                </Text>
+                                <Text style={[WORD, { color: TEXT_TITLE }]}>
+                                    <FormattedMessage id="We have sent the verificatoin code to" defaultMessage={"We have sent the verificatoin code to"} />
+                                </Text>
+                                <Text style={[WORD, { color: TEXT_TITLE }]}>
+                                    <FormattedMessage id="Please write the code below and hit the button" defaultMessage={"Please write the code below and hit the button"} />
+                                </Text>
+                            </View>
+                            <View style={{ flexDirection: "row", gap: 15 * SCALE, marginBottom: 30 * SCALE }}>
+                                {codeRefs.current.map((_, index) => {
+                                    return (
+                                        <TextInput
+                                            ref={ref => {
+                                                if (ref && !inputRefs.current.includes(ref)) {
+                                                    inputRefs.current.push(ref);
+                                                }
+                                            }}
+                                            key={index}
+                                            keyboardType="numeric"
+                                            maxLength={1}
+                                            contextMenuHidden
+                                            selectTextOnFocus
+                                            onKeyPress={event => handleOnChangeCode(event.nativeEvent.key, index)}
+                                            style={[styles.text,
+                                            {
+                                                height: 50 * SCALE,
+                                                minWidth: 40 * SCALE, maxWidth: 40 * SCALE, marginBottom: 20 * SCALE,
+                                                backgroundColor: TEXT, color: BACKGROUND, fontSize: 25 * SCALE
+                                            }
+                                            ]}>
+                                        </TextInput>)
+                                })}
+                            </View>
+                            <View>
+                                <TouchableOpacity
+                                    onPress={() => setConfirm(false)}>
+                                    <Text style={[styles.text, { marginBottom: 10 * SCALE, color: "lightblue" }]}>
+                                        <FormattedMessage id="GoBack" defaultMessage={"Go Back"} />
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
+                                onPress={
+                                    () => {
+                                        code.current = "";
+                                        codeRefs.current.forEach(element => {
+                                            code.current += element;
+                                        });
+                                        confirmCode();
+                                    }
+                                }
+                            >
+                                <Text style={[WORD_20, { color: BACKGROUND }]}>
+                                    Verify code
+                                </Text>
+                            </TouchableOpacity>
+                        </View>)}
+            </TouchableWithoutFeedback>
+            <StatusBar barStyle={"light-content"} />
         </SafeAreaViewContainer>
+
     )
 }
 
 const styles = StyleSheet.create({
     header: {
-        flex: 1,
-        backgroundColor: BACKGROUND,
         alignItems: "center",
         justifyContent: "center",
     },
     text: {
         fontSize: 16 * SCALE,
         color: TEXT,
+        textAlign: "center",
+        borderRadius: 10 * SCALE,
+    },
+    main: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "flex-start",
+    },
+    phoneInput: {
+        height: 50 * SCALE,
+        borderColor: "#FFFFFF",
+        borderWidth: 1,
+        textAlign: "left",
+        textAlign: "left",
     }
 })
 

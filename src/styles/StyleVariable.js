@@ -47,13 +47,6 @@ const SafeAreaViewContainer = ({ children }) => {
         </SafeAreaView>
     )
 }
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: BACKGROUND,
-        flex: 1,
-        padding: 10 * SCALE
-    }
-})
 
 const TITLE = StyleSheet.create({
     color: TEXT_TITLE,
@@ -82,6 +75,14 @@ const WORD_20 = StyleSheet.create({
     fontSize: 20 * SCALE,
     textAlign: "center",
     textAlignVertical: "center"
+})
+
+const styles = StyleSheet.create({
+    container: {
+        backgroundColor: BACKGROUND,
+        flex: 1,
+        padding: 10 * SCALE
+    }
 })
 
 export {
