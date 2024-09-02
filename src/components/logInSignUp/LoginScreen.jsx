@@ -1,6 +1,6 @@
-import auth from "@react-native-firebase/auth";
-import React, { useEffect, useRef, useState } from "react";
-import { Keyboard, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import React, { useContext, useRef, useState } from "react";
+import { FormattedMessage } from "react-intl";
+import { Keyboard, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {
     BACKGROUND,
     BOX_SHADOW,
@@ -15,9 +15,20 @@ import {
     WORD_20,
     WRAPPER_SHADOW,
 } from "../../styles/StyleVariable";
-import { FormattedMessage } from "react-intl";
+// import { getApps, initializeApp } from "@react-native-firebase/app";
+import { CountryCodeContext } from "../../HOC/CountryCodeContext";
 
-
+// if (getApps().length < 1) {
+//     initializeApp(
+//         {
+//             apiKey: "AIzaSyC8RtuwAAoVlt-6OZ2_6jQeWzLTKT5a5-4",
+//             appId: "1:537863165120:android:e7806d222d218b28884925",
+//             databaseURL: "",
+//             messagingSenderId: "537863165120",
+//             projectId: "mymatch-huybach",
+//             storageBucket: "mymatch-huybach.appspot.com"
+//         })
+// }
 
 const loginHandle = (navigation) => {
     //thiếu gửi yêu cầu đến Oauth fix
@@ -29,15 +40,22 @@ const loginHandle = (navigation) => {
     else navigation.navigate("CreateData1");
 
 }
+
+
 const LoginScreen = function ({ navigation }) {
+
+    const { countryCode } = useContext(CountryCodeContext);
 
     const [confirm, setConfirm] = useState(null);
     const [isPhoneFocus, setIsPhoneFocus] = useState(false);
-    const [CountryCode, setCountryCode] = useState('+');
 
     const phoneNumber = useRef('');
+    //lưu tham chiếu tới từng ô OTP
     const inputRefs = useRef([]);
+    //lưu giá trị của từng ô OTP rồi cộng chuỗi vào code
     const codeRefs = useRef(["", "", "", "", "", ""]);
+
+    //khi confirm thành công nhớ reset lại code = ""                   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const code = useRef('');
 
     /**
@@ -53,37 +71,37 @@ const LoginScreen = function ({ navigation }) {
     }
 
     //ẩn verify code cho các android tự động nhập 
-    const onAuthStateChanged = user => {
-        if (user) {
-            console.log(user);
-        }
-    }
+    // const onAuthStateChanged = user => {
+    //     if (user) {
+    //         console.log("login");
+    //     }
+    // }
 
-    useEffect(() => {
-        const subcriber = auth().onAuthStateChanged(onAuthStateChanged);
-        return subcriber;
-    }, [])
+    // useEffect(() => {
+    //     const subcriber = auth().onAuthStateChanged(onAuthStateChanged);
+    //     return subcriber;
+    // }, [])
 
-    const signInWithPhoneNumber = async (number) => {
-        try {
-            const confirmation = await auth().signInWithPhoneNumber(number);
-            // Xử lý xác thực thành công, lưu confirmation để xác nhận mã OTP
-            console.log('Confirmation result:', confirmation);
-            setConfirm(confirmation);
-        } catch (error) {
-            console.error(error.message)
-        }
-    }
+    // const signInWithPhoneNumber = async (number) => {
+    //     try {
+    //         const confirmation = await auth().signInWithPhoneNumber(number);
+    //         // Xử lý xác thực thành công, lưu confirmation để xác nhận mã OTP
+    //         console.log('Confirmation result:', confirmation);
+    //         setConfirm(confirmation);
+    //     } catch (error) {
+    //         console.error(error.message)
+    //     }
+    // }
 
 
-    const confirmCode = async () => {
-        try {
-            confirm.confirm(code.current)
-        } catch (error) {
-            alert("Invalid code");
-            console.error(error.message);
-        }
-    }
+    // const confirmCode = async () => {
+    //     try {
+    //         confirm.confirm(code.current);
+    //     } catch (error) {
+    //         alert("Invalid code");
+    //         console.error(error.message);
+    //     }
+    // }
 
     //optional chaining (?) kiểm tra xem là null hay undefine thì sẽ trả ra undefine chứ kh gây lỗi
     const handleOnChangeCode = (text, index) => {
@@ -111,18 +129,20 @@ const LoginScreen = function ({ navigation }) {
                                     <FormattedMessage id="Please confirm your country code and enter your phone number" defaultMessage={"Please confirm your country code and enter your phone number"} />
                                 </Text>
                             </View>
-                            <View style={{ marginBottom: 40 * SCALE, flexDirection: "row" }}>
+                            <TouchableOpacity style={{ marginBottom: 40 * SCALE, flexDirection: "row" }}>
                                 <TouchableOpacity
-                                    onPress={() => navigation.navigate("CountryCode", { setCountryCode })}>
-                                    <TextInput
-                                        editable={false}
-                                        value={CountryCode}
-                                        placeholderTextColor={TEXT}
-                                        style={[styles.text, styles.phoneInput,
-                                        {
-                                            minWidth: 60 * SCALE, padding: 10 * SCALE,
-                                            borderRightWidth: 0
-                                        }]} />
+                                    onPress={() => navigation.navigate("CountryCode")}>
+                                    <View pointerEvents="none">
+                                        <TextInput
+                                            editable={false}
+                                            value={countryCode}
+                                            placeholderTextColor={TEXT}
+                                            style={[styles.text, styles.phoneInput,
+                                            {
+                                                minWidth: 60 * SCALE, padding: 10 * SCALE,
+                                                borderRightWidth: 0
+                                            }]} />
+                                    </View>
                                 </TouchableOpacity>
                                 <View style={{ borderColor: "#FFFFFF", borderWidth: 0.5 * SCALE }}></View>
                                 <TextInput
@@ -139,17 +159,18 @@ const LoginScreen = function ({ navigation }) {
                                         borderLeftWidth: 0, paddingLeft: 20 * SCALE, paddingRight: 20 * SCALE,
                                     },
                                     isPhoneFocus && { borderColor: BUTTON_TEXT }]} />
-                            </View>
+                            </TouchableOpacity>
                             <TouchableOpacity style={[WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD, { justifyContent: "center" }]}
                                 onPress={
-                                    () => signInWithPhoneNumber(CountryCode + phoneNumber.current)
+                                    () => setConfirm(true)
                                 }
                             >
                                 <Text style={[WORD_20, { color: BACKGROUND }]}>
                                     <FormattedMessage id="Send code" defaultMessage={"Send code"} />
                                 </Text>
                             </TouchableOpacity>
-                        </View>)
+                        </View>
+                    )
                     : (
                         <View style={styles.main}>
                             <View style={{ padding: 40 * SCALE }}>
@@ -203,7 +224,7 @@ const LoginScreen = function ({ navigation }) {
                                         codeRefs.current.forEach(element => {
                                             code.current += element;
                                         });
-                                        confirmCode();
+                                        navigation.navigate("CreateData1")
                                     }
                                 }
                             >
@@ -214,7 +235,7 @@ const LoginScreen = function ({ navigation }) {
                         </View>)}
             </TouchableWithoutFeedback>
             <StatusBar barStyle={"light-content"} />
-        </SafeAreaViewContainer>
+        </SafeAreaViewContainer >
 
     )
 }

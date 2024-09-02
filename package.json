@@ -12,8 +12,6 @@
   "dependencies": {
     "@formatjs/intl": "^2.10.4",
     "@react-native-community/datetimepicker": "8.0.1",
-    "@react-native-firebase/app": "^20.4.0",
-    "@react-native-firebase/auth": "^20.4.0",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
     "expo": "~51.0.28",
