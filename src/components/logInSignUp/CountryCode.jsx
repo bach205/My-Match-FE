@@ -5,8 +5,7 @@ import {
     BUTTON_TEXT,
     SafeAreaViewContainer,
     SCALE,
-    TEXT,
-    TEXT_TITLE
+    TEXT
 } from "../../styles/StyleVariable";
 
 const originCountry = [

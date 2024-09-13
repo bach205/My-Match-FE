@@ -12,11 +12,16 @@ const ResultMBTI = ({ navigation, route }) => {
 
     console.log(route.params.defineMBTI)
 
+    const handleOnPress = () => {
+        navigation.navigate("TabHome")
+    }
     return (
         <>
             <StatusBar barStyle={"light-content"} />
             <SafeAreaViewContainer>
-                <TouchableOpacity style={{ alignItems: "center" }}>
+                <TouchableOpacity
+                    onPress={handleOnPress}
+                    style={{ alignItems: "center" }}>
                     <Text style={[WORD_20, WRAPPER_SHADOW, BOX_SHADOW, BUTTON_STANDARD,]}>
                         Go to HomeScreen
                     </Text>

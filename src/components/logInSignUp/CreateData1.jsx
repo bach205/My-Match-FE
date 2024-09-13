@@ -1,24 +1,28 @@
-import {
-    StyleSheet, StatusBar,
-    View, Text, TouchableOpacity, KeyboardAvoidingView,
-    TextInput, Platform, Keyboard,
-    TouchableWithoutFeedback,
-    ScrollView,
-} from "react-native"
+import RNDateTimePicker from "@react-native-community/datetimepicker";
 import React, { useCallback, useRef, useState } from "react";
+import { FormattedMessage } from "react-intl";
+import {
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import {
     BACKGROUND,
-    TEXT,
-    SCALE,
-    BUTTON_TEXT,
     BOX_SHADOW,
     BUTTON_STANDARD,
-    WRAPPER_SHADOW,
+    BUTTON_TEXT,
+    SafeAreaViewContainer,
+    SCALE,
+    TEXT,
     TITLE,
-    SafeAreaViewContainer
-} from "../../styles/StyleVariable"
-import { FormattedMessage } from "react-intl";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
+    WRAPPER_SHADOW
+} from "../../styles/StyleVariable";
 
 const NameRender = React.memo(function ({ setName }) {
     return (
@@ -239,62 +243,62 @@ const CreateData1 = ({ navigation }) => {
     return (
         <>
             <StatusBar barStyle={'light-content'} />
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.container}>
-                    <SafeAreaViewContainer>
-                        <View style={styles.header}>
-                            <TouchableOpacity
-                                onPress={() => navigation.goBack()}
-                            >
-                                <Text style={[styles.inputPosition, styles.textButton]}>
-                                    <FormattedMessage id="GoBack" defaultMessage={"Go Back"} />
-                                </Text>
-                            </TouchableOpacity>
-                        </View >
+            <KeyboardAwareScrollView
+                extraHeight={0}
+                keyboardShouldPersistTaps={"handled"}
+                style={{ flex: 1, backgroundColor: BACKGROUND }}
+                contentContainerStyle={{ flex: 1, backgroundColor: BACKGROUND }}>
+                <SafeAreaViewContainer>
+                    <View style={styles.header}>
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                        >
+                            <Text style={[styles.inputPosition, styles.textButton]}>
+                                <FormattedMessage id="GoBack" defaultMessage={"Go Back"} />
+                            </Text>
+                        </TouchableOpacity>
+                    </View >
 
-                        <ScrollView style={styles.main}>
-                            <View style={[styles.mainChild,
-                            { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
-                                <NameRender setName={name} />
-                            </View>
-                            <View style={[styles.mainChild,
-                            { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
-                                <GenderRender gender={gender} setGender={setGender} />
-                            </View>
-                            <View style={[styles.mainChild,
-                            { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
-                                <BirthGender isShown={isShown} setIsShown={setIsShown}
-                                    birth={birth} setBirth={setBirth}
-                                    age={age} setAge={setAge}
-                                    zodiac={zodiac} setZodiac={setZodiac} />
-                            </View>
-                        </ScrollView>
-
-                        <View style={styles.footer}>
-                            <TouchableOpacity
-                                onPress={() => HandleContinue(name.current)}
-                                activeOpacity={
-                                    name !== "" &&
-                                        gender !== "" &&
-                                        birth !== "" ? 0 : 1
-                                }
-                            >
-                                <Text style={[styles.textButton,
-                                    BOX_SHADOW,
-                                    BUTTON_STANDARD,
-                                (name === "" ||
-                                    gender === "" ||
-                                    birth === "") && { backgroundColor: "#FFCCCC80" }
-                                ]}>
-                                    <FormattedMessage id="Continue" defaultMessage={"Continue"} />
-                                </Text>
-                            </TouchableOpacity>
+                    <ScrollView style={styles.main}>
+                        <View style={[styles.mainChild,
+                        { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
+                            <NameRender setName={name} />
                         </View>
-                    </SafeAreaViewContainer>
-                </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
+                        <View style={[styles.mainChild,
+                        { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
+                            <GenderRender gender={gender} setGender={setGender} />
+                        </View>
+                        <View style={[styles.mainChild,
+                        { marginBottom: 30 * SCALE, marginTop: 20 * SCALE }]}>
+                            <BirthGender isShown={isShown} setIsShown={setIsShown}
+                                birth={birth} setBirth={setBirth}
+                                age={age} setAge={setAge}
+                                zodiac={zodiac} setZodiac={setZodiac} />
+                        </View>
+                    </ScrollView>
+
+                    <View style={styles.footer}>
+                        <TouchableOpacity
+                            onPress={() => HandleContinue(name.current)}
+                            activeOpacity={
+                                name !== "" &&
+                                    gender !== "" &&
+                                    birth !== "" ? 0 : 1
+                            }
+                        >
+                            <Text style={[styles.textButton,
+                                BOX_SHADOW,
+                                BUTTON_STANDARD,
+                            (name === "" ||
+                                gender === "" ||
+                                birth === "") && { backgroundColor: "#FFCCCC80" }
+                            ]}>
+                                <FormattedMessage id="Continue" defaultMessage={"Continue"} />
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaViewContainer>
+            </KeyboardAwareScrollView>
         </>
     )
 }

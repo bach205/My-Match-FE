@@ -12,7 +12,7 @@ import { BACKGROUND, SCALE, TEXT } from "../../styles/StyleVariable";
 const LoadingScreen = function (props) {
     let [isLogin, setIsLogin] = useState(false)             //fix rewrite
 
-    if (isLogin) props.navigation.navigate("Home")
+    if (isLogin) props.navigation.navigate("TabHome")
     else props.navigation.navigate("Login");
     return (
         <View style={styles.container}>

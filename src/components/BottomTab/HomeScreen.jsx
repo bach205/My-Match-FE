@@ -1,26 +1,19 @@
 import React from "react"
 import { FormattedMessage } from "react-intl"
-import { StatusBar, StyleSheet, Text, View } from "react-native"
+import { SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native"
 import { BACKGROUND, SCALE, TEXT } from "../../styles/StyleVariable"
+import { Button } from "react-native-paper"
 const HomeScreen = function ({ navigation }) {
-    /**
-     * Kiểm tra xem có phải được điều hướng từ LoadingScreen không
-     * nếu có thì sẽ xóa stack của navigation rồi reset lại 
-     * với First entry là LoginScreen
-     */
-    if (navigation.getState()["index"] !== 0) {
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" }]
-        });
-    }
     return (
-        <View style={styles.header}>
+        <SafeAreaView style={styles.header}>
             <Text style={styles.text}>
                 <FormattedMessage id="HomeTiltle" defaultMessage={"Home Screen"}></FormattedMessage>
             </Text>
-            <StatusBar style="auto" />
-        </View>
+            <Button>
+                <Text>hi</Text>
+            </Button>
+            <StatusBar barStyle={"light-content"} />
+        </SafeAreaView>
     )
 }
 

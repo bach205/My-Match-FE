@@ -1,6 +1,6 @@
 import React, { useContext, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
-import { Keyboard, Pressable, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Keyboard, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {
     BACKGROUND,
     BOX_SHADOW,
@@ -36,7 +36,7 @@ const loginHandle = (navigation) => {
     //dùng tạm để kiểm tra xem có tài khoản hay không
     //backend kiểm tra xem trong CSDL có email đấy chưa nếu chưa thì sẽ trả ra false
     const isUserExist = false;
-    if (isUserExist) navigation.navigate("Home");
+    if (isUserExist) navigation.navigate("TabHome");
     else navigation.navigate("CreateData1");
 
 }
