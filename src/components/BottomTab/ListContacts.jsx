@@ -1,10 +1,35 @@
 import React from "react"
 import { FormattedMessage } from "react-intl"
-import { View, StatusBar, StyleSheet, Text, TouchableOpacity } from "react-native"
+import { View, StatusBar, StyleSheet, Text, TouchableOpacity, FlatList } from "react-native"
 import { BACKGROUND, SafeAreaViewContainer, SCALE, TEXT } from "../../styles/StyleVariable"
 import { Dimensions } from "react-native"
 
-const { width } = Dimensions.get("screen")
+const { width } = Dimensions.get("screen");
+let contactsArray = [
+    { id: 0 },
+    { id: 1 }
+];
+const RenderListContacts = React.memo(({ navigation }) => {
+    const handleRenderItem = ({ item }) => {
+        console.log("render")
+        return (
+            <TouchableOpacity
+                style={styles.contact}
+                onPress={() => { navigation.navigate("MessageScreen", item.id) }}>
+                <Text style={styles.text}>{item.id}</Text>
+            </TouchableOpacity>
+        )
+    }
+    const handleKeyExtractor = item => item.id;
+    return (
+        <FlatList
+            data={contactsArray}
+            renderItem={handleRenderItem}
+            keyExtractor={handleKeyExtractor}
+            style={styles.main}
+        />
+    )
+})
 const ListConTacts = function ({ navigation }) {
     return (
         <SafeAreaViewContainer >
@@ -13,13 +38,7 @@ const ListConTacts = function ({ navigation }) {
                     <FormattedMessage id="ListContacts" defaultMessage={"ListContacts"}></FormattedMessage>
                 </Text>
             </View>
-            <View style={styles.main}>
-                <TouchableOpacity
-                    style={styles.contact}
-                    onPress={() => { navigation.navigate("MessageScreen") }}>
-                    <Text style={styles.text}>you</Text>
-                </TouchableOpacity>
-            </View>
+            <RenderListContacts navigation={navigation} />
             <StatusBar barStyle={"light-content"} />
         </SafeAreaViewContainer>
     )
@@ -33,7 +52,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
     },
     main: {
-        flex: 10
+        flex: 0
     },
     text: {
         color: TEXT,
@@ -44,7 +63,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#FFFFFF",
         height: 70 * SCALE,
-        width: width,
     }
 })
 export default ListConTacts;

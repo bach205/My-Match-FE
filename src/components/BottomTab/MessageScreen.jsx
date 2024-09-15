@@ -7,7 +7,9 @@ import { io } from "socket.io-client"
 import { SafeAreaViewContainer, SCALE, TEXT, BACKGROUND, BUTTON_TEXT, TEXT_TITLE } from "../../styles/StyleVariable"
 
 const SOCKET_SERVER = "http://192.168.1.12:3002"
-const MYID = "0000"
+let socket;
+const MYID = 0
+const TYPESIZE = 16 * SCALE;
 
 const RenderFlatList = React.memo(({ data }) => {
     const keyExtractor = useCallback((_, index) => index, [])
@@ -35,8 +37,7 @@ const RenderFlatList = React.memo(({ data }) => {
     }, [data])
     return (
         <KeyboardAwareFlatList
-            extraHeight={0}
-            keyboardShouldPersistTaps={"handled"}
+            keyboardShouldPersistTaps={"always"}
             style={[{ backgroundColor: BACKGROUND }, styles.main]}
             data={data}
             keyExtractor={keyExtractor}
@@ -48,63 +49,92 @@ const RenderFlatList = React.memo(({ data }) => {
     )
 })
 
-const MessageScreen = function ({ navigation }) {
+const RenderTextInput = React.memo(({ route, setData }) => {
+    const initTypeHeight = useRef(0);
+    const textInputRef = useRef(null);
+
     const [message, setMessage] = useState("");
-    const [data, setData] = useState([])
     const [lineCount, setLineCount] = useState(1);
 
-    const textInputRef = useRef(null);
-    const typeHeight = useRef(0);
-
-    const handleOnChangeText = (text) => {
-        setMessage(text);
-    }
     useEffect(() => {
-        const socket = io(SOCKET_SERVER, { transports: ["websocket"] })
+        socket = io(SOCKET_SERVER, { transports: ["websocket"] });
         socket.on("connect", () => {
             console.log("connect")
+            socket.emit("joinRoom", { srcId: MYID, desId: route.params })
         })
-        socket.on('connect_error', (err) => { console.log('Connection Error:', err); });
+        socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
         // Kết nối tới server và lắng nghe sự kiện
         socket.on('message', (newMessage) => {
-            setData([...data, {
-                id: "0001",
-                message: newMessage,
-                createAt: new Date()
+            console.log(newMessage);
+            setData(data => [...data, {
+                id: 1,
+                message: newMessage.message,
+                createAt: newMessage.createAt
             }]);
         });
         // Ngắt kết nối khi component bị hủy
         return () => {
+            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
+            socket.off("message");
             socket.disconnect();
         };
     }, []);
 
-    useEffect(() => {
-        if (textInputRef.current) {
-            textInputRef.current.measure((x, y, width, height) => {
-                typeHeight.current = height;
-            });
-        }
-    }, [])
+    const handleOnChangeText = (text) => {
+        setMessage(text);
+    }
 
     const handleOnPress = () => {
-        // socket.emit("message", message);
+        const createAt = new Date();
         setData(data => [...data, {
-            id: "0000",
+            id: MYID,
             message,
-            createAt: new Date()
+            createAt
         }])
-
+        socket.emit("message", {
+            message,
+            srcId: MYID,
+            desId: route.params,
+            createAt
+        });
         setMessage("");
+        setLineCount(1);
     }
+
+    //cái đoạn này bị bug nhiều quá nên mấy cái logic bẩn mắt này để fix bug thui :(((
+    //chỉ biết là để như này thì nó mới hoạt động bình thường được :((
+    //không hiểu sao message = "" thì nó contentHeight lại bị nhận giá trị bất thường 
     const handleOnContentSizeChange = (event) => {
-        const contentHeight = event.nativeEvent.contentSize.height;
-        const numberOflines = Math.ceil((contentHeight - typeHeight.current) / 16 * SCALE + 1);
+        const contentHeight = (message === "") ? 0 : event.nativeEvent.contentSize.height;
+        if (!initTypeHeight.current) initTypeHeight.current = contentHeight;
+        const numberOflines = Math.ceil((contentHeight - initTypeHeight.current) / TYPESIZE + 1);
         if (numberOflines <= 5 && numberOflines > 0 && numberOflines != lineCount)
-            setLineCount(numberOflines);
+            setLineCount(numberOflines < 0 ? 1 : numberOflines);
     }
+    return (
+        <>
+            <TextInput
+                ref={textInputRef}
+                style={styles.type}
+                multiline={true}
+                numberOfLines={lineCount}
+                placeholder="type..."
+                placeholderTextColor={TEXT}
+                value={message}
+                onChangeText={handleOnChangeText}
+                onContentSizeChange={handleOnContentSizeChange}
+            />
+            <TouchableOpacity
+                onPress={handleOnPress}>
+                <Text style={styles.text}>send</Text>
+            </TouchableOpacity>
+        </>
+    )
+})
 
+const MessageScreen = function ({ route }) {
 
+    const [data, setData] = useState([])
 
     return (
         <>
@@ -113,21 +143,7 @@ const MessageScreen = function ({ navigation }) {
                 <View style={{ flex: 1 }}>
                     <RenderFlatList data={data} />
                     <View style={styles.footer}>
-                        <TextInput
-                            ref={textInputRef}
-                            style={styles.type}
-                            multiline={true}
-                            numberOfLines={lineCount}
-                            placeholder="type..."
-                            placeholderTextColor={TEXT}
-                            value={message}
-                            onChangeText={handleOnChangeText}
-                            onContentSizeChange={handleOnContentSizeChange}
-                        />
-                        <TouchableOpacity
-                            onPress={handleOnPress}>
-                            <Text style={styles.text}>send</Text>
-                        </TouchableOpacity>
+                        <RenderTextInput route={route} setData={setData} />
                     </View>
                 </View>
             </SafeAreaViewContainer>
@@ -147,8 +163,8 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     main: {
-        borderColor: "#ffffff",
         borderWidth: 1,
+        borderColor: "#FFFFFF",
         flex: 0
     },
     footer: {
@@ -173,7 +189,7 @@ const styles = StyleSheet.create({
     },
     text: {
         color: TEXT,
-        fontSize: 16 * SCALE,
+        fontSize: TYPESIZE,
     },
 })
 export default MessageScreen;
