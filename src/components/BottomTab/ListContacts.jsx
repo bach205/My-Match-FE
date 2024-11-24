@@ -4,14 +4,25 @@ import { View, StatusBar, StyleSheet, Text, TouchableOpacity, FlatList } from "r
 import { BACKGROUND, SafeAreaViewContainer, SCALE, TEXT } from "../../styles/StyleVariable"
 import { Dimensions } from "react-native"
 
-const { width } = Dimensions.get("screen");
+const { width, height } = Dimensions.get("screen");
 let contactsArray = [
     { id: 0 },
-    { id: 1 }
+    { id: 1 },
+    { id: 2 },
+    { id: 3 },
+    { id: 4 },
+    { id: 5 },
+    { id: 6 },
+    { id: 10 },
+    { id: 11 },
+    { id: 12 },
+    { id: 13 },
+    { id: 14 },
+    { id: 15 },
+    { id: 16 }
 ];
 const RenderListContacts = React.memo(({ navigation }) => {
     const handleRenderItem = ({ item }) => {
-        console.log("render")
         return (
             <TouchableOpacity
                 style={styles.contact}
@@ -33,12 +44,15 @@ const RenderListContacts = React.memo(({ navigation }) => {
 const ListConTacts = function ({ navigation }) {
     return (
         <SafeAreaViewContainer >
+
             <View style={styles.header}>
                 <Text style={styles.text}>
-                    <FormattedMessage id="ListContacts" defaultMessage={"ListContacts"}></FormattedMessage>
+                    List contacts
                 </Text>
             </View>
-            <RenderListContacts navigation={navigation} />
+            <View style={styles.container}>
+                <RenderListContacts navigation={navigation} />
+            </View>
             <StatusBar barStyle={"light-content"} />
         </SafeAreaViewContainer>
     )
@@ -52,7 +66,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
     },
     main: {
-        flex: 0
+        flex: 1
     },
     text: {
         color: TEXT,
@@ -63,6 +77,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#FFFFFF",
         height: 70 * SCALE,
+    },
+    container: {
+        flex: 6
     }
 })
 export default ListConTacts;

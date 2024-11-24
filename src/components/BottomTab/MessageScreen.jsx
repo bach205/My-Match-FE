@@ -1,44 +1,76 @@
-import React, { useCallback, useEffect, useState, useRef } from "react"
-import { FormattedMessage } from "react-intl"
-import { FlatList, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import * as SecureStore from 'expo-secure-store'
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { Button, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view"
-import { Button } from "react-native-paper"
 import { io } from "socket.io-client"
-import { SafeAreaViewContainer, SCALE, TEXT, BACKGROUND, BUTTON_TEXT, TEXT_TITLE } from "../../styles/StyleVariable"
+import { BACKGROUND, BUTTON_TEXT, SafeAreaViewContainer, SCALE, TEXT, TEXT_TITLE } from "../../styles/StyleVariable"
 
-const SOCKET_SERVER = "http://192.168.1.12:3002"
+const SOCKET_SERVER = "http://192.168.1.78:3002"
 let socket;
 const MYID = 0
 const TYPESIZE = 16 * SCALE;
+const defineRoom = (a, b) => {
+    if (a > b) {
+        let tmp = a;
+        a = b;
+        b = tmp;
+    }
+    return "" + a + b
+}
+
+//lưu {key: value} vào storage
+const saveDataToStorage = async (key, value) => {
+    await SecureStore.setItemAsync(key, JSON.stringify(value));
+}
+
+//lấy value theo key từ storage sẽ trả ra null nếu không lấy được
+const getDataFromStorage = async (key) => {
+    try {
+        const data = await SecureStore.getItemAsync(key)
+        return JSON.parse(data);
+    } catch (error) {
+        return null
+    }
+}
 
 const RenderFlatList = React.memo(({ data }) => {
-    const keyExtractor = useCallback((_, index) => index, [])
-    const handleRenderItem = useCallback(({ item }) => {
+    const keyExtractor = useCallback((_, index) => index, []);
+    const handleRenderItem = useCallback(({ item, index }) => {
+        const isLastItem = index === data.length - 1;
         return (
             <View style={{
-                flexDirection: item.id == MYID ? "row-reverse" : "row"
+                flexDirection: item.srcId == MYID ? "row-reverse" : "row"
             }}>
-                <Text style={
-                    [
-                        styles.text,
-                        styles.message,
-                        item.id == MYID
-                            ? {
-                                borderTopLeftRadius: 17 * SCALE, borderBottomLeftRadius: 17 * SCALE,
-                                backgroundColor: BUTTON_TEXT,
-                            }
-                            : {
-                                borderTopRightRadius: 17 * SCALE, borderBottomRightRadius: 17 * SCALE,
-                                backgroundColor: TEXT_TITLE,
-                            }
-                    ]}>{item.message}</Text>
+                <View style={[styles.vertical, styles.right]}>
+                    {item.type === "text" && (<Text style={
+                        [
+                            styles.text,
+                            styles.message,
+                            item.srcId == MYID
+                                ? {
+                                    borderTopLeftRadius: 17 * SCALE, borderBottomLeftRadius: 17 * SCALE,
+                                    backgroundColor: BUTTON_TEXT,
+                                }
+                                : {
+                                    borderTopRightRadius: 17 * SCALE, borderBottomRightRadius: 17 * SCALE,
+                                    backgroundColor: TEXT_TITLE,
+                                }
+                        ]}>{item.message}
+                    </Text>)}
+                    {isLastItem && item.srcId === MYID && (
+                        <Text style={styles.text}>
+                            {item.status}
+                        </Text>
+
+                    )}
+                </View>
             </View>
         )
     }, [data])
     return (
         <KeyboardAwareFlatList
             keyboardShouldPersistTaps={"always"}
-            style={[{ backgroundColor: BACKGROUND }, styles.main]}
+            style={[{ backgroundColor: BACKGROUND }]}
             data={data}
             keyExtractor={keyExtractor}
             initialNumToRender={16}
@@ -49,56 +81,40 @@ const RenderFlatList = React.memo(({ data }) => {
     )
 })
 
-const RenderTextInput = React.memo(({ route, setData }) => {
+const RenderTextInput = React.memo(({ data, route, setData }) => {
     const initTypeHeight = useRef(0);
     const textInputRef = useRef(null);
 
     const [message, setMessage] = useState("");
     const [lineCount, setLineCount] = useState(1);
 
-    useEffect(() => {
-        socket = io(SOCKET_SERVER, { transports: ["websocket"] });
-        socket.on("connect", () => {
-            console.log("connect")
-            socket.emit("joinRoom", { srcId: MYID, desId: route.params })
-        })
-        socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
-        // Kết nối tới server và lắng nghe sự kiện
-        socket.on('message', (newMessage) => {
-            console.log(newMessage);
-            setData(data => [...data, {
-                id: 1,
-                message: newMessage.message,
-                createAt: newMessage.createAt
-            }]);
-        });
-        // Ngắt kết nối khi component bị hủy
-        return () => {
-            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
-            socket.off("message");
-            socket.disconnect();
-        };
-    }, []);
-
     const handleOnChangeText = (text) => {
         setMessage(text);
     }
 
     const handleOnPress = () => {
-        const createAt = new Date();
-        setData(data => [...data, {
-            id: MYID,
-            message,
-            createAt
-        }])
-        socket.emit("message", {
-            message,
-            srcId: MYID,
-            desId: route.params,
-            createAt
-        });
-        setMessage("");
-        setLineCount(1);
+        if (message) {
+            const createAt = new Date();
+            let mess = {
+                srcId: MYID,
+                message,
+                type: 'text',
+                status: "sending",
+                createAt
+            }
+            setData(data => [...data, mess])
+            setMessage("");
+            setLineCount(1);
+            socket.emit("message", {
+                ...mess,
+                desId: route.params,
+                status: "send"
+            }, async (response) => {
+                mess.status = response.status;
+                setData(data => [...data]);
+                await saveDataToStorage(defineRoom(MYID, route.params), [...data, mess]);
+            });
+        }
     }
 
     //cái đoạn này bị bug nhiều quá nên mấy cái logic bẩn mắt này để fix bug thui :(((
@@ -132,20 +148,55 @@ const RenderTextInput = React.memo(({ route, setData }) => {
     )
 })
 
-const MessageScreen = function ({ route }) {
+const MessageScreen = function ({ route, navigation }) {
 
     const [data, setData] = useState([])
-
+    useEffect(() => {
+        getDataFromStorage(defineRoom(MYID, route.params))
+            .then(data => {
+                if (data) {
+                    setData(data)
+                }
+            });
+        // if (oldData) setData(oldData);
+        socket = io(SOCKET_SERVER, { transports: ["websocket"] });
+        socket.on("connect", () => {
+            console.log("connect")
+            socket.emit("joinRoom", { srcId: MYID, desId: route.params })
+        })
+        socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
+        // Kết nối tới server và lắng nghe sự kiện
+        socket.on('message', (newMessage) => {
+            console.log(newMessage);
+            setData(data => [...data, {
+                srcId: newMessage.srcId,
+                message: newMessage.message,
+                type: newMessage.type,
+                status: newMessage.status,
+                createAt: newMessage.createAt
+            }]);
+        });
+        // Ngắt kết nối khi component bị hủy
+        return () => {
+            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
+            socket.off("message");
+            socket.disconnect();
+        };
+    }, []);
     return (
         <>
             <StatusBar barStyle={"light-content"} />
             <SafeAreaViewContainer>
-                <View style={{ flex: 1 }}>
-                    <RenderFlatList data={data} />
-                    <View style={styles.footer}>
-                        <RenderTextInput route={route} setData={setData} />
-                    </View>
+                <View style={styles.header}>
+                    <Button title="back" onPress={() => navigation.goBack()} />
                 </View>
+                <View style={styles.main}>
+                    <RenderFlatList data={data} />
+                </View>
+                <View style={styles.footer}>
+                    <RenderTextInput data={data} route={route} setData={setData} />
+                </View>
+
             </SafeAreaViewContainer>
         </>
     )
@@ -162,15 +213,19 @@ const styles = StyleSheet.create({
         borderRadius: 5 * SCALE,
         textAlign: "center",
     },
-    main: {
-        borderWidth: 1,
+    header: {
+        flex: 1,
         borderColor: "#FFFFFF",
-        flex: 0
+        borderWidth: 2,
+        flexDirection: "row",
+    },
+    main: {
+        flex: 11
     },
     footer: {
         paddingLeft: 5 * SCALE,
         paddingRight: 5 * SCALE,
-        flex: 0,
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         alignContent: "flex-end",
@@ -191,5 +246,14 @@ const styles = StyleSheet.create({
         color: TEXT,
         fontSize: TYPESIZE,
     },
+    vertical: {
+        borderColor: "#FFFFFF",
+        borderWidth: 1,
+        flexDirection: "column",
+        gap: 0
+    },
+    right: {
+        alignItems: "flex-end",
+    }
 })
 export default MessageScreen;

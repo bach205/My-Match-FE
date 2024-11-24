@@ -31,8 +31,8 @@ const getLocaleFromStorage = async () => {
  * nếu không thì locale mặc định sẽ là en
  * rồi lưu vào local storage
  */
-const getLocale = async () => {
-    let userLocale = await getLocaleFromStorage();
+const getLocale = async (key) => {
+    let userLocale = await getLocaleFromStorage(key);
     if (userLocale) {
         return userLocale
     }
@@ -63,7 +63,7 @@ const IntlProviderWrapper = function ({ children }) {
     const [locale, setLocale] = useState(getLocales()[0].languageCode)
     //lấy locale từ trong storage nếu không có thì lấy locale='en' mặc định rồi lưu lại vào locale
     useEffect(() => {
-        getLocale()
+        getLocale('user_locale')
             .then(locale => setLocale(locale))
     }, [])
     return (
