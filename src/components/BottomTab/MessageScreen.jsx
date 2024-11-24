@@ -28,7 +28,9 @@ const sendMessage = (socket, mess, route, data, setData) => {
     }, async (response) => {
         mess.status = response.status;
         setData(data => [...data]);
-        await saveDataToStorage(defineRoom(MYID, route.params), [...data.splice(-20), mess]);
+        if (mess.status === "send") {
+            await saveDataToStorage(defineRoom(MYID, route.params), [...data.splice(-20), mess]);
+        }
     });
 }
 
@@ -165,16 +167,18 @@ const MessageScreen = function ({ route, navigation }) {
 
     const [data, setData] = useState([])
     useEffect(() => {
-        //lay tin nhan tu trong locale
-        getDataFromStorage(defineRoom(MYID, route.params))
-            .then(data => {
-                if (data) {
-                    setData(data)
-                }
-            });
         socket = io(SOCKET_SERVER, { transports: ["websocket"] });
         socket.on("connect", () => {
-            console.log("connect")
+            console.log("connect: " + socket.connected)
+            if (data.length === 0) {
+                socket.emit("LoadMessage", { srcId: MYID, desId: route.params }, async response => {
+                    if (response.message) {
+                        console.log(2)
+                        setData(response.message);
+                        await saveDataToStorage(defineRoom(MYID, route.params), response.message);
+                    }
+                })
+            }
             socket.emit("joinRoom", { srcId: MYID, desId: route.params })
             while (!messageQueue.current.isEmpty()) {
 
@@ -194,6 +198,13 @@ const MessageScreen = function ({ route, navigation }) {
                 createAt: newMessage.createAt
             }]);
         });
+        //lay tin nhan tu trong locale
+        getDataFromStorage(defineRoom(MYID, route.params))
+            .then(data => {
+                if (data) {
+                    setData(data)
+                }
+            })
         // Ngắt kết nối khi component bị hủy
         return () => {
             socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
