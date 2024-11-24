@@ -4,11 +4,13 @@ import { Button, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View 
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view"
 import { io } from "socket.io-client"
 import { BACKGROUND, BUTTON_TEXT, SafeAreaViewContainer, SCALE, TEXT, TEXT_TITLE } from "../../styles/StyleVariable"
+import Queue from '../../dataStructure/queue'
 
 const SOCKET_SERVER = "http://192.168.1.78:3002"
 let socket;
 const MYID = 0
 const TYPESIZE = 16 * SCALE;
+//xac dinh so phong
 const defineRoom = (a, b) => {
     if (a > b) {
         let tmp = a;
@@ -16,6 +18,18 @@ const defineRoom = (a, b) => {
         b = tmp;
     }
     return "" + a + b
+}
+//ham gui tin nhan
+const sendMessage = (socket, mess, route, data, setData) => {
+    socket.emit("message", {
+        ...mess,
+        desId: route.params,
+        status: "send"
+    }, async (response) => {
+        mess.status = response.status;
+        setData(data => [...data]);
+        await saveDataToStorage(defineRoom(MYID, route.params), [...data.splice(-20), mess]);
+    });
 }
 
 //lưu {key: value} vào storage
@@ -81,7 +95,7 @@ const RenderFlatList = React.memo(({ data }) => {
     )
 })
 
-const RenderTextInput = React.memo(({ data, route, setData }) => {
+const RenderTextInput = React.memo(({ queue, data, route, setData }) => {
     const initTypeHeight = useRef(0);
     const textInputRef = useRef(null);
 
@@ -105,15 +119,12 @@ const RenderTextInput = React.memo(({ data, route, setData }) => {
             setData(data => [...data, mess])
             setMessage("");
             setLineCount(1);
-            socket.emit("message", {
-                ...mess,
-                desId: route.params,
-                status: "send"
-            }, async (response) => {
-                mess.status = response.status;
-                setData(data => [...data]);
-                await saveDataToStorage(defineRoom(MYID, route.params), [...data, mess]);
-            });
+            if (socket.connected) {
+                sendMessage(socket, mess, route, data, setData);
+            }
+            else {
+                queue.enqueue(mess);
+            }
         }
     }
 
@@ -150,19 +161,26 @@ const RenderTextInput = React.memo(({ data, route, setData }) => {
 
 const MessageScreen = function ({ route, navigation }) {
 
+    const messageQueue = useRef(new Queue());
+
     const [data, setData] = useState([])
     useEffect(() => {
+        //lay tin nhan tu trong locale
         getDataFromStorage(defineRoom(MYID, route.params))
             .then(data => {
                 if (data) {
                     setData(data)
                 }
             });
-        // if (oldData) setData(oldData);
         socket = io(SOCKET_SERVER, { transports: ["websocket"] });
         socket.on("connect", () => {
             console.log("connect")
             socket.emit("joinRoom", { srcId: MYID, desId: route.params })
+            while (!messageQueue.current.isEmpty()) {
+
+                let mess = messageQueue.current.dequeue().value;
+                sendMessage(socket, mess, route, data, setData);
+            }
         })
         socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
         // Kết nối tới server và lắng nghe sự kiện
@@ -194,7 +212,7 @@ const MessageScreen = function ({ route, navigation }) {
                     <RenderFlatList data={data} />
                 </View>
                 <View style={styles.footer}>
-                    <RenderTextInput data={data} route={route} setData={setData} />
+                    <RenderTextInput queue={messageQueue.current} data={data} route={route} setData={setData} />
                 </View>
 
             </SafeAreaViewContainer>

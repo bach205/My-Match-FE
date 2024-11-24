@@ -32,6 +32,9 @@ export default class Queue {
         }
         return i;
     }
+    isEmpty() {
+        return this.head == null;
+    }
     clear() {
         this.head = this.tail = null;
     }
