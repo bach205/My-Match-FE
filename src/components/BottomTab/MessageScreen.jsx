@@ -19,6 +19,14 @@ const defineRoom = (a, b) => {
     }
     return "" + a + b
 }
+const deleteKey = async (key) => {
+    try {
+        await SecureStore.deleteItemAsync(key);
+        console.log(`Key ${key} has been deleted successfully.`);
+    } catch (error) {
+        console.error('Error deleting key', error);
+    }
+};
 //ham gui tin nhan
 const sendMessage = (socket, mess, route, data, setData) => {
     socket.emit("message", {
@@ -27,9 +35,12 @@ const sendMessage = (socket, mess, route, data, setData) => {
         status: "send"
     }, async (response) => {
         mess.status = response.status;
+
+        //de react biet la da thay doi status cua mess trong data
         setData(data => [...data]);
         if (mess.status === "send") {
-            await saveDataToStorage(defineRoom(MYID, route.params), [...data.splice(-20), mess]);
+            console.log("load" + data)
+            await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-20)]);
         }
     });
 }
@@ -122,7 +133,7 @@ const RenderTextInput = React.memo(({ queue, data, route, setData }) => {
             setMessage("");
             setLineCount(1);
             if (socket.connected) {
-                sendMessage(socket, mess, route, data, setData);
+                sendMessage(socket, mess, route, [...data, mess], setData);
             }
             else {
                 queue.enqueue(mess);
@@ -168,20 +179,32 @@ const MessageScreen = function ({ route, navigation }) {
     const [data, setData] = useState([])
     useEffect(() => {
         socket = io(SOCKET_SERVER, { transports: ["websocket"] });
-        socket.on("connect", () => {
-            console.log("connect: " + socket.connected)
-            if (data.length === 0) {
-                socket.emit("LoadMessage", { srcId: MYID, desId: route.params }, async response => {
-                    if (response.message) {
-                        console.log(2)
-                        setData(response.message);
-                        await saveDataToStorage(defineRoom(MYID, route.params), response.message);
-                    }
-                })
+        return () => {
+            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
+            if (socket) {
+                socket.disconnect();
             }
+
+        }
+    }, [])
+
+    useEffect(() => {
+        console.log("father" + data)
+        socket.on("connect", () => {
+            console.log("out sa" + data.length)
+            // console.log("connect: " + socket.connected)
+            // if (data.length === 0) {
+            //     socket.emit("LoadMessage", { srcId: MYID, desId: route.params }, async response => {
+            //         if (response.message) {
+            //             console.log(2)
+            //             setData(response.message);
+            //             await saveDataToStorage(defineRoom(MYID, route.params), response.message);
+            //         }
+            //     })
+            // }
             socket.emit("joinRoom", { srcId: MYID, desId: route.params })
             while (!messageQueue.current.isEmpty()) {
-
+                console.log(data.length)
                 let mess = messageQueue.current.dequeue().value;
                 sendMessage(socket, mess, route, data, setData);
             }
@@ -200,29 +223,31 @@ const MessageScreen = function ({ route, navigation }) {
         });
         //lay tin nhan tu trong locale
         getDataFromStorage(defineRoom(MYID, route.params))
-            .then(data => {
-                if (data) {
-                    setData(data)
+            .then(oldMessage => {
+                if (oldMessage && data.length === 0 && oldMessage.length !== 0) {
+                    setData(oldMessage)
                 }
             })
         // Ngắt kết nối khi component bị hủy
         return () => {
-            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
+            //vi ham listener se bi dong bang neu khong unmount no ( tuc la gia tri cua data se bi dong bang o gia tri luc tao ham listener)
+            socket.off("connect");
+            socket.off("connect_error");
             socket.off("message");
-            socket.disconnect();
-        };
-    }, []);
+        }
+    }, [data]);
     return (
         <>
             <StatusBar barStyle={"light-content"} />
             <SafeAreaViewContainer>
                 <View style={styles.header}>
-                    <Button title="back" onPress={() => navigation.goBack()} />
+                    <Button title="back" onPress={() => { socket.disconnect(); navigation.goBack() }} />
                 </View>
                 <View style={styles.main}>
                     <RenderFlatList data={data} />
                 </View>
                 <View style={styles.footer}>
+                    <Button title='ok' onPress={() => deleteKey(defineRoom(MYID, route.params))} />
                     <RenderTextInput queue={messageQueue.current} data={data} route={route} setData={setData} />
                 </View>
 
