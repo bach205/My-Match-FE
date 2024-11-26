@@ -39,7 +39,6 @@ const sendMessage = (socket, mess, route, data, setData) => {
         //de react biet la da thay doi status cua mess trong data
         setData(data => [...data]);
         if (mess.status === "send") {
-            console.log("load" + data)
             await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-20)]);
         }
     });
@@ -189,9 +188,7 @@ const MessageScreen = function ({ route, navigation }) {
     }, [])
 
     useEffect(() => {
-        console.log("father" + data)
         socket.on("connect", () => {
-            console.log("out sa" + data.length)
             // console.log("connect: " + socket.connected)
             // if (data.length === 0) {
             //     socket.emit("LoadMessage", { srcId: MYID, desId: route.params }, async response => {
@@ -204,22 +201,28 @@ const MessageScreen = function ({ route, navigation }) {
             // }
             socket.emit("joinRoom", { srcId: MYID, desId: route.params })
             while (!messageQueue.current.isEmpty()) {
-                console.log(data.length)
                 let mess = messageQueue.current.dequeue().value;
                 sendMessage(socket, mess, route, data, setData);
             }
         })
         socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
         // Kết nối tới server và lắng nghe sự kiện
-        socket.on('message', (newMessage) => {
-            console.log(newMessage);
+        socket.on('message', async (newMessage) => {
             setData(data => [...data, {
-                srcId: newMessage.srcId,
+                srcId: 1,
                 message: newMessage.message,
                 type: newMessage.type,
                 status: newMessage.status,
                 createAt: newMessage.createAt
             }]);
+            await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-20),
+            {
+                srcId: 1,
+                message: newMessage.message,
+                type: newMessage.type,
+                status: newMessage.status,
+                createAt: newMessage.createAt
+            }])
         });
         //lay tin nhan tu trong locale
         getDataFromStorage(defineRoom(MYID, route.params))
