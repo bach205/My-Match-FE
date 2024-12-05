@@ -5,9 +5,9 @@ import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view"
 import { io } from "socket.io-client"
 import { BACKGROUND, BUTTON_TEXT, SafeAreaViewContainer, SCALE, TEXT, TEXT_TITLE } from "../../styles/StyleVariable"
 import Queue from '../../dataStructure/queue'
+import * as api from "../../config/apiMethod.js"
 
 const SOCKET_SERVER = "http://192.168.1.78:3002"
-let socket;
 const MYID = 0
 const TYPESIZE = 16 * SCALE;
 //xac dinh so phong
@@ -39,7 +39,7 @@ const sendMessage = (socket, mess, route, data, setData) => {
         //de react biet la da thay doi status cua mess trong data
         setData(data => [...data]);
         if (mess.status === "send") {
-            await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-20)]);
+            await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-15)]);
         }
     });
 }
@@ -83,7 +83,7 @@ const RenderFlatList = React.memo(({ data }) => {
                                 }
                         ]}>{item.message}
                     </Text>)}
-                    {isLastItem && item.srcId === MYID && (
+                    {(isLastItem || item.status === "sending") && item.srcId === MYID && (
                         <Text style={styles.text}>
                             {item.status}
                         </Text>
@@ -107,7 +107,7 @@ const RenderFlatList = React.memo(({ data }) => {
     )
 })
 
-const RenderTextInput = React.memo(({ queue, data, route, setData }) => {
+const RenderTextInput = React.memo(({ socket, queue, data, route, setData }) => {
     const initTypeHeight = useRef(0);
     const textInputRef = useRef(null);
 
@@ -172,73 +172,91 @@ const RenderTextInput = React.memo(({ queue, data, route, setData }) => {
 })
 
 const MessageScreen = function ({ route, navigation }) {
-
     const messageQueue = useRef(new Queue());
 
-    const [data, setData] = useState([])
-    useEffect(() => {
-        socket = io(SOCKET_SERVER, { transports: ["websocket"] });
-        return () => {
-            socket.emit("leaveRoom", { srcId: MYID, desId: route.params })
-            if (socket) {
-                socket.disconnect();
-            }
+    const [socket, setSocket] = useState(null);
+    const [data, setData] = useState([]);
+    const [isOnline, setIsOnline] = useState(false);
 
+    //tao ket not socket
+    useEffect(() => {
+        let newSocket = io(SOCKET_SERVER, { transports: ["websocket"] });
+        setSocket(newSocket);
+        return () => {
+            newSocket.emit("leaveRoom", { srcId: MYID, desId: route.params })
+            if (newSocket) {
+                newSocket.disconnect();
+            }
         }
     }, [])
 
+    //load tin nhan
     useEffect(() => {
-        socket.on("connect", () => {
-            // console.log("connect: " + socket.connected)
-            // if (data.length === 0) {
-            //     socket.emit("LoadMessage", { srcId: MYID, desId: route.params }, async response => {
-            //         if (response.message) {
-            //             console.log(2)
-            //             setData(response.message);
-            //             await saveDataToStorage(defineRoom(MYID, route.params), response.message);
-            //         }
-            //     })
-            // }
-            socket.emit("joinRoom", { srcId: MYID, desId: route.params })
-            while (!messageQueue.current.isEmpty()) {
-                let mess = messageQueue.current.dequeue().value;
-                sendMessage(socket, mess, route, data, setData);
-            }
-        })
-        socket.on('connect_error', (err) => console.log('Connection Error:', err.message));
-        // Kết nối tới server và lắng nghe sự kiện
-        socket.on('message', async (newMessage) => {
-            setData(data => [...data, {
-                srcId: 1,
-                message: newMessage.message,
-                type: newMessage.type,
-                status: newMessage.status,
-                createAt: newMessage.createAt
-            }]);
-            await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-20),
-            {
-                srcId: 1,
-                message: newMessage.message,
-                type: newMessage.type,
-                status: newMessage.status,
-                createAt: newMessage.createAt
-            }])
-        });
-        //lay tin nhan tu trong locale
-        getDataFromStorage(defineRoom(MYID, route.params))
-            .then(oldMessage => {
-                if (oldMessage && data.length === 0 && oldMessage.length !== 0) {
-                    setData(oldMessage)
+        query = `?srcId=${MYID}&desId=${route.params}`;
+        api.get(`http://192.168.1.78:3002/message/loadmessage/${query}`)
+            .then(response => {
+                if (response) {
+                    setData(data => [...response])
                 }
             })
+            .catch(error => {
+                getDataFromStorage(defineRoom(MYID, route.params))
+                    .then(oldMessage => {
+                        if (oldMessage) {
+                            setData(data => [...oldMessage])
+                        }
+                    })
+                console.log(error)
+            })
+    }, [isOnline])
+
+    //lang nghe cac su kien tu socket
+    useEffect(() => {
+        if (socket) {
+            socket.on("connect", () => {
+                console.log("connect");
+                if (!isOnline) setIsOnline(true);
+                socket.emit("joinRoom", { srcId: MYID, desId: route.params })
+                while (!messageQueue.current.isEmpty()) {
+                    let mess = messageQueue.current.dequeue().value;
+                    sendMessage(socket, mess, route, data, setData);
+                }
+            })
+            socket.on('connect_error', (err) => {
+                console.log('Connection Error:', err.message);
+                if (isOnline) {
+                    setIsOnline(false);
+                }
+            });
+            // Kết nối tới server và lắng nghe sự kiện
+            socket.on('message', async (newMessage) => {
+                setData(data => [...data, {
+                    srcId: 1,
+                    message: newMessage.message,
+                    type: newMessage.type,
+                    status: newMessage.status,
+                    createAt: newMessage.createAt
+                }]);
+                await saveDataToStorage(defineRoom(MYID, route.params), [...data.slice(-15),
+                {
+                    srcId: 1,
+                    message: newMessage.message,
+                    type: newMessage.type,
+                    status: newMessage.status,
+                    createAt: newMessage.createAt
+                }])
+            });
+        }
         // Ngắt kết nối khi component bị hủy
         return () => {
             //vi ham listener se bi dong bang neu khong unmount no ( tuc la gia tri cua data se bi dong bang o gia tri luc tao ham listener)
-            socket.off("connect");
-            socket.off("connect_error");
-            socket.off("message");
+            if (socket) {
+                socket.off("connect");
+                socket.off("connect_error");
+                socket.off("message");
+            }
         }
-    }, [data]);
+    }, [data, isOnline]);  // can dependency la data de gia tri cua data khong bi dong bang o thoi diem ban dau
     return (
         <>
             <StatusBar barStyle={"light-content"} />
@@ -246,12 +264,17 @@ const MessageScreen = function ({ route, navigation }) {
                 <View style={styles.header}>
                     <Button title="back" onPress={() => { socket.disconnect(); navigation.goBack() }} />
                 </View>
+                <View>
+                    {!isOnline && (
+                        <Text style={styles.text}>no internet connected......</Text>
+                    )}
+                </View>
                 <View style={styles.main}>
                     <RenderFlatList data={data} />
                 </View>
                 <View style={styles.footer}>
                     <Button title='ok' onPress={() => deleteKey(defineRoom(MYID, route.params))} />
-                    <RenderTextInput queue={messageQueue.current} data={data} route={route} setData={setData} />
+                    <RenderTextInput socket={socket} queue={messageQueue.current} data={data} route={route} setData={setData} />
                 </View>
 
             </SafeAreaViewContainer>
@@ -300,6 +323,7 @@ const styles = StyleSheet.create({
         color: TEXT,
     },
     text: {
+        textAlign: "center",
         color: TEXT,
         fontSize: TYPESIZE,
     },
